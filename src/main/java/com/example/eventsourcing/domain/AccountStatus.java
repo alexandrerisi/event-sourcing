@@ -1,6 +1,6 @@
 package com.example.eventsourcing.domain;
 
-public enum Status {
+public enum AccountStatus {
     CREATED,
     ACTIVATED,
     HOLD

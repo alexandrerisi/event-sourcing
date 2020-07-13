@@ -1,6 +1,6 @@
 package com.example.eventsourcing.domain;
 
-import com.example.eventsourcing.domain.event.*;
+import com.example.eventsourcing.coreapi.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
@@ -17,64 +17,63 @@ public class AccountAggregate {
     @AggregateIdentifier
     private String id;
     private double accountBalance;
-    private String currency, status;
+    private AccountCurrency currency;
+    private AccountStatus status;
 
     @CommandHandler
-    public AccountAggregate(CreateAccountCommand createAccountCommand){
-        AggregateLifecycle.apply(new AccountCreatedEvent(createAccountCommand.getId(),
+    public AccountAggregate(CreateAccountCmd createAccountCommand){
+        AggregateLifecycle.apply(new AccountCreatedEvt(createAccountCommand.getId(),
                 createAccountCommand.getAccountBalance(),
                 createAccountCommand.getCurrency()));
     }
 
     @CommandHandler
-    protected void on(CreditMoneyCommand creditMoneyCommand){
-        AggregateLifecycle.apply(new MoneyCreditedEvent(creditMoneyCommand.getId(),
-                creditMoneyCommand.getCreditAmount(),
-                creditMoneyCommand.getCurrency()));
+    protected void handle(CreditMoneyCmd creditMoneyCommand){
+        AggregateLifecycle.apply(new MoneyCreditedEvt(creditMoneyCommand.getId(),
+                creditMoneyCommand.getCreditAmount()));
     }
 
     @CommandHandler
-    protected void on(DebitMoneyCommand debitMoneyCommand){
-        AggregateLifecycle.apply(new MoneyDebitedEvent(debitMoneyCommand.getId(),
-                debitMoneyCommand.getDebitAmount(),
-                debitMoneyCommand.getCurrency()));
+    protected void handle(DebitMoneyCmd debitMoneyCommand){
+        AggregateLifecycle.apply(new MoneyDebitedEvt(debitMoneyCommand.getId(),
+                debitMoneyCommand.getDebitAmount()));
     }
 
     @EventSourcingHandler
-    protected void on(AccountCreatedEvent accountCreatedEvent){
+    protected void handle(AccountCreatedEvt accountCreatedEvent){
         this.id = accountCreatedEvent.getId();
         this.accountBalance = accountCreatedEvent.getAccountBalance();
         this.currency = accountCreatedEvent.getCurrency();
-        this.status = String.valueOf(Status.CREATED);
+        this.status = AccountStatus.CREATED;
 
-        AggregateLifecycle.apply(new AccountActivatedEvent(id, Status.ACTIVATED));
+        AggregateLifecycle.apply(new AccountActivatedEvt(id));
     }
 
     @EventSourcingHandler
-    protected void on(AccountActivatedEvent accountActivatedEvent){
-        this.status = String.valueOf(accountActivatedEvent.getStatus());
+    protected void on(AccountActivatedEvt accountActivatedEvent){
+        this.status = AccountStatus.ACTIVATED;
     }
 
     @EventSourcingHandler
-    protected void on(MoneyCreditedEvent moneyCreditedEvent){
+    protected void on(MoneyCreditedEvt moneyCreditedEvt){
 
-        if (accountBalance < 0 & (accountBalance + moneyCreditedEvent.getCreditAmount()) >= 0)
-            AggregateLifecycle.apply(new AccountActivatedEvent(id, Status.ACTIVATED));
+        if (accountBalance < 0 & (accountBalance + moneyCreditedEvt.getCreditedAmount()) >= 0)
+            AggregateLifecycle.apply(new AccountActivatedEvt(id));
 
-        accountBalance += moneyCreditedEvent.getCreditAmount();
+        accountBalance += moneyCreditedEvt.getCreditedAmount();
     }
 
     @EventSourcingHandler
-    protected void on(MoneyDebitedEvent moneyDebitedEvent){
+    protected void on(MoneyDebitedEvt moneyDebitedEvent){
 
-        if (accountBalance >= 0 & (accountBalance - moneyDebitedEvent.getDebitAmount()) < 0)
-            AggregateLifecycle.apply(new AccountHeldEvent(id, Status.HOLD));
+        if (accountBalance >= 0 & (accountBalance - moneyDebitedEvent.getDebitedAmount()) < 0)
+            AggregateLifecycle.apply(new AccountHeldEvt(id));
 
-        accountBalance -= moneyDebitedEvent.getDebitAmount();
+        accountBalance -= moneyDebitedEvent.getDebitedAmount();
     }
 
     @EventSourcingHandler
-    protected void on(AccountHeldEvent accountHeldEvent){
-        status = String.valueOf(accountHeldEvent.getStatus());
+    protected void on(AccountHeldEvt accountHeldEvent){
+        status = AccountStatus.HOLD;
     }
 }
