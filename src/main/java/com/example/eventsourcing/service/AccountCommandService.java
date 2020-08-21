@@ -3,6 +3,7 @@ package com.example.eventsourcing.service;
 import com.example.eventsourcing.coreapi.*;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -10,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
+@Profile("command")
 public class AccountCommandService {
 
     private final CommandGateway commandGateway;

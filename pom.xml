@@ -41,12 +41,12 @@
             <groupId>org.axonframework</groupId>
             <artifactId>axon-spring-boot-starter</artifactId>
             <version>4.3.1</version>
-            <exclusions>
+            <!--<exclusions>
                 <exclusion>
                     <groupId>org.axonframework</groupId>
                     <artifactId>axon-server-connector</artifactId>
                 </exclusion>
-            </exclusions>
+            </exclusions>-->
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>

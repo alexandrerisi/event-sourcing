@@ -1,12 +1,15 @@
 package com.example.eventsourcing.service;
 
+import com.example.eventsourcing.coreapi.GetAccountAggregateQuery;
 import com.example.eventsourcing.coreapi.GetBankAccountQuery;
+import com.example.eventsourcing.domain.AccountAggregate;
 import com.example.eventsourcing.domain.AccountEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.queryhandling.QueryGateway;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Profile("query")
 public class AccountQueryService {
 
     private final EventStore eventStore;
@@ -30,6 +34,10 @@ public class AccountQueryService {
 
     public CompletableFuture<AccountEntity> getAccount(String id) {
         return queryGateway.query(new GetBankAccountQuery(id), AccountEntity.class);
+    }
+
+    public CompletableFuture<AccountAggregate> getAccountAggregate(String id) {
+        return queryGateway.query(new GetAccountAggregateQuery(id), AccountAggregate.class);
     }
 
     @AllArgsConstructor

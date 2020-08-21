@@ -1,9 +1,11 @@
 package com.example.eventsourcing.rest;
 
+import com.example.eventsourcing.domain.AccountAggregate;
 import com.example.eventsourcing.domain.AccountEntity;
 import com.example.eventsourcing.service.AccountQueryService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping(value = "/bank-accounts")
 @Api(value = "Account Query Events Endpoint", tags = "Account Queries")
 @RequiredArgsConstructor
+@Profile("query")
 public class AccountQueryController {
 
     private final AccountQueryService accountQueryService;
@@ -28,5 +31,10 @@ public class AccountQueryController {
     @GetMapping("/{accountNumber}")
     public CompletableFuture<AccountEntity> getAccountInfo(@PathVariable String accountNumber) {
         return accountQueryService.getAccount(accountNumber);
+    }
+
+    @GetMapping("/aggregates/{accountNumber}")
+    public CompletableFuture<AccountAggregate> getAccountAggregateInfo(@PathVariable String accountNumber) {
+        return accountQueryService.getAccountAggregate(accountNumber);
     }
 }

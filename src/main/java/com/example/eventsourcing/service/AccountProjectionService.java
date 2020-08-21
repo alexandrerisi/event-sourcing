@@ -1,30 +1,28 @@
 package com.example.eventsourcing.service;
 
 import com.example.eventsourcing.coreapi.*;
+import com.example.eventsourcing.domain.AccountAggregate;
 import com.example.eventsourcing.domain.AccountEntity;
 import com.example.eventsourcing.domain.AccountStatus;
 import com.example.eventsourcing.exception.AccountNotFoundException;
 import com.example.eventsourcing.repository.AccountRepository;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.eventsourcing.eventstore.EventStore;
-import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.messaging.ExecutionException;
+import org.axonframework.modelling.command.Repository;
 import org.axonframework.queryhandling.QueryHandler;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
+@Profile("query")
 public class AccountProjectionService {
 
-    private final EventStore eventStore;
-    private final QueryGateway queryGateway;
     private final AccountRepository repository;
+    private final Repository<AccountAggregate> aggregateRepository;
 
     @EventHandler
     public void on(AccountCreatedEvt evt) {
@@ -55,6 +53,13 @@ public class AccountProjectionService {
     @QueryHandler
     public AccountEntity handle(GetBankAccountQuery query) {
         return this.repository.findById(query.getId()).orElse(null);
+    }
+
+    @QueryHandler
+    public CompletableFuture<AccountAggregate> handle(GetAccountAggregateQuery query) throws ExecutionException {
+        var future = new CompletableFuture<AccountAggregate>();
+        aggregateRepository.load(query.getId()).execute(future::complete);
+        return future;
     }
 
     public void modifyAccountStatus(String id, AccountStatus status) {
